@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cane & Barrel — Weekly Bar Order</title>
+<style>
+:root{--bg:#0f1216;--card:#1a1f27;--line:#2a313c;--accent:#c9962b;--accent2:#e0b04a;--text:#e8eaed;--muted:#9aa3af;--ok:#3fae6a;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding-bottom:120px;}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#12161c,#12161cf5);border-bottom:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(6px);}
+h1{margin:0;font-size:18px;letter-spacing:.3px;}
+h1 span{color:var(--accent2);}
+.sub{color:var(--muted);font-size:12px;margin-top:3px;}
+.controls{display:flex;gap:8px;margin-top:10px;}
+.search{flex:1;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px 12px;border-radius:10px;font-size:15px;}
+.count{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--accent2);white-space:nowrap;display:flex;align-items:center;font-weight:600;}
+main{max-width:720px;margin:0 auto;padding:8px 12px;}
+.cat{margin-top:18px;}
+.cat h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:0 0 8px 4px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;transition:border-color .15s,background .15s;}
+.row.on{border-color:var(--accent);background:#20242c;}
+.cb{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:2px solid var(--line);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#12161c;}
+.row.on .cb{background:var(--accent);border-color:var(--accent);}
+.info{flex:1;min-width:0;cursor:pointer;}
+.name{font-size:15px;font-weight:600;line-height:1.25;}
+.meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.meta b{color:#c3ccd6;font-weight:600;}
+.meta .bpc{color:var(--accent2);font-weight:600;}
+.qtywrap{flex:0 0 auto;display:flex;align-items:center;gap:5px;opacity:.35;transition:opacity .15s;}
+.row.on .qtywrap{opacity:1;}
+.qty{width:52px;background:#0f1216;border:1px solid var(--line);color:var(--text);text-align:center;padding:7px 4px;border-radius:8px;font-size:15px;}
+.qlbl{font-size:11px;color:var(--muted);}
+footer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(0deg,#0f1216,#0f1216f2);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;max-width:720px;margin:0 auto;}
+button.act{flex:1;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;}
+.copy{background:var(--accent);color:#12161c;}
+.copy:active{background:var(--accent2);}
+.clear{background:var(--card);color:var(--muted);border:1px solid var(--line);flex:0 0 auto;padding:14px 18px;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ok);color:#fff;padding:12px 20px;border-radius:30px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 6px 20px #0008;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+dialog{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:14px;padding:0;width:92%;max-width:560px;}
+dialog::backdrop{background:#000a;}
+.dlgh{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+.dlgh b{font-size:15px;}
+textarea{width:100%;height:44vh;background:#0f1216;color:var(--text);border:none;padding:14px;font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.5;resize:none;}
+#outView{max-height:52vh;overflow:auto;background:#fff;margin:0;padding:14px;}
+#outView table{width:100%;}
+.dlgf{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--line);}
+.dlgf .act{flex:1;padding:13px 8px;font-size:14px;}
+.x{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;}
+.hidden{display:none!important;}
+#customWrap{max-width:720px;margin:0 auto;padding:0 12px;}
+.custom-hint{font-size:12px;color:var(--muted);margin:0 4px 10px;}
+.crow{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;align-items:center;}
+.crow input{background:#0f1216;border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;font-size:14px;}
+.crow .c-name{flex:1;min-width:0;}
+.crow .c-size{width:64px;}
+.crow .c-bpc{width:52px;text-align:center;}
+.crow .c-qty{width:56px;text-align:center;}
+.crow .c-del{flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;}
+.addbtn{width:100%;background:var(--card);border:1px dashed var(--line);color:var(--accent2);padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.addbtn:active{background:#20242c;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cane <span>&</span> Barrel — Weekly Bar Order</h1>
+  <div class="sub">Check anything running low. Enter how many <b style="color:#e0b04a">CASES</b> to order (defaults to 1). Then tap Copy Order.</div>
+  <div class="controls">
+    <input class="search" id="search" placeholder="Search item or vendor…" autocomplete="off">
+    <div class="count" id="count">0 items</div>
+  </div>
+</header>
+<main id="list"></main>
+<div id="customWrap">
+  <div class="cat">
+    <h2>Other / Not Listed</h2>
+    <div class="custom-hint">Type in anything that isn't on the list above. Fill in bottles-per-case (/cs) if you know it, and the number of cases.</div>
+    <div id="customRows"></div>
+    <button id="addCustom" class="addbtn">+ Add another item</button>
+  </div>
+</div>
+<footer>
+  <button class="act clear" id="clearBtn">Clear</button>
+  <button class="act copy" id="copyBtn">Copy Order</button>
+</footer>
+<div class="toast" id="toast">Copied to clipboard ✓</div>
+<dialog id="dlg">
+  <div class="dlgh"><b>Order Summary</b><button class="x" id="dlgX">&times;</button></div>
+  <div id="outView"></div>
+  <textarea id="out" readonly style="display:none"></textarea>
+  <div class="dlgf">
+    <button class="act clear" id="dlgClose">Close</button>
+    <button class="act clear" id="dlgCopyText">Copy for Text</button>
+    <button class="act copy" id="dlgCopy">Copy for Email</button>
+  </div>
+</dialog>
+<script>
+const ITEMS = [{"cat":"Vodka","item":"Tito's Vodka","size":"1L","vendor":"Southern","par":23,"rop":20,"bpc":12},{"cat":"Vodka","item":"Grey Goose Vodka","size":"1L","vendor":"Southern","par":5,"rop":4,"bpc":6},{"cat":"Vodka","item":"360 Madagascar Vanilla Vodka","size":"1L","vendor":"RNDC","par":5,"rop":4,"bpc":12},{"cat":"Vodka","item":"Helix 7 Vodka","size":"1L","vendor":"RNDC","par":5,"rop":4,"bpc":12},{"cat":"Vodka","item":"Smirnoff Vanilla Twist","size":"750mL","vendor":"Southern","par":3,"rop":3,"bpc":12},{"cat":"Vodka","item":"Smirnoff Vanilla Vodka","size":"1L","vendor":"Southern","par":2,"rop":2,"bpc":12},{"cat":"Vodka","item":"Neft Black Vodka","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Vodka","item":"Wheatley Vodka","size":"1L","vendor":"RNDC","par":1,"rop":1,"bpc":12},{"cat":"Vodka","item":"Ketel One Vodka","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":15},{"cat":"Gin","item":"The Botanist Gin","size":"1L","vendor":"RNDC","par":3,"rop":2,"bpc":6},{"cat":"Gin","item":"Hendrick's Gin","size":"1L","vendor":"Breakthru","par":3,"rop":3,"bpc":6},{"cat":"Gin","item":"Still Gin","size":"1L","vendor":"Southern","par":5,"rop":5,"bpc":6},{"cat":"Gin","item":"Bombay Sapphire Gin","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Gin","item":"Empress 1908 Gin","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Rum","item":"Havana Club Blanco Rum","size":"750mL","vendor":"Southern","par":8,"rop":7,"bpc":12},{"cat":"Rum","item":"Havana Club Clasico Rum","size":"750mL","vendor":"Southern","par":2,"rop":2,"bpc":12},{"cat":"Rum","item":"Bounty White Rum","size":"1L","vendor":"Mavrick","par":8,"rop":7,"bpc":12},{"cat":"Rum","item":"Bounty Dark Rum","size":"1L","vendor":"Mavrick","par":2,"rop":2,"bpc":12},{"cat":"Rum","item":"Papa's Pilar Blonde Rum","size":"750mL","vendor":"Southern","par":3,"rop":2,"bpc":6},{"cat":"Rum","item":"Mount Gay Extra Old Rum","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Rum","item":"Mount Gay Eclipse Rum","size":"1L","vendor":"RNDC","par":1,"rop":1,"bpc":12},{"cat":"Rum","item":"Mount Gay Black Barrel Rum","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Rum","item":"Bacardi Superior Rum","size":"1L","vendor":"Southern","par":2,"rop":1,"bpc":12},{"cat":"Rum","item":"RumHaven Coconut Rum","size":"1L","vendor":"Johnson Brothers","par":1,"rop":1,"bpc":12},{"cat":"Rum","item":"Captain Morgan Spiced Rum","size":"1L","vendor":"Southern","par":4,"rop":3,"bpc":12},{"cat":"Rum","item":"Myers's Original Rum","size":"1L","vendor":"Breakthru","par":1,"rop":1,"bpc":12},{"cat":"Rum","item":"Diplomatico Reserva Exclusiva","size":"750mL","vendor":"Breakthru","par":1,"rop":1,"bpc":6},{"cat":"Tequila/Mezcal","item":"Marcado Blanco","size":"750mL","vendor":"Mexcorp","par":8,"rop":7,"bpc":1},{"cat":"Tequila/Mezcal","item":"Marcado Reposado","size":"750mL","vendor":"Mexcorp","par":1,"rop":1,"bpc":12},{"cat":"Tequila/Mezcal","item":"Tequila Ocho Plata","size":"750mL","vendor":"Southern","par":7,"rop":6,"bpc":6},{"cat":"Tequila/Mezcal","item":"Tequila Ocho Reposado","size":"750mL","vendor":"Southern","par":3,"rop":3,"bpc":6},{"cat":"Tequila/Mezcal","item":"Mi Campo Blanco","size":"1L","vendor":"Southern","par":11,"rop":9,"bpc":6},{"cat":"Tequila/Mezcal","item":"Mi Campo Reposado","size":"750mL","vendor":"Southern","par":6,"rop":5,"bpc":6},{"cat":"Tequila/Mezcal","item":"Mijenta Blanco","size":"750mL","vendor":"Southern","par":4,"rop":3,"bpc":6},{"cat":"Tequila/Mezcal","item":"Siete Misterios Doba-Yej Mezcal","size":"750mL","vendor":"Breakthru","par":4,"rop":3,"bpc":6},{"cat":"Tequila/Mezcal","item":"Lalo Blanco","size":"750mL","vendor":"Southern","par":2,"rop":2,"bpc":6},{"cat":"Tequila/Mezcal","item":"Flecha Azul Blanco","size":"750mL","vendor":"Breakthru","par":2,"rop":2,"bpc":6},{"cat":"Tequila/Mezcal","item":"Flecha Azul Anejo","size":"750mL","vendor":"Breakthru","par":1,"rop":1,"bpc":6},{"cat":"Tequila/Mezcal","item":"Siete Leguas Blanco","size":"1L","vendor":"Breakthru","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Buffalo Trace Bourbon","size":"1L","vendor":"Breakthru","par":5,"rop":4,"bpc":12},{"cat":"Whiskey","item":"Woodford Reserve Bourbon","size":"1L","vendor":"Breakthru","par":3,"rop":2,"bpc":6},{"cat":"Whiskey","item":"Maker's Mark Bourbon","size":"1L","vendor":"Southern","par":2,"rop":2,"bpc":12},{"cat":"Whiskey","item":"Angel's Envy Bourbon","size":75,"vendor":"Southern","par":2,"rop":2,"bpc":6},{"cat":"Whiskey","item":"Angel's Envy Rye","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Jameson Irish Whiskey","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"Basil Hayden Bourbon","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"Crown Royal","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"High West Double Rye","size":"750mL","vendor":"Southern","par":2,"rop":2,"bpc":6},{"cat":"Whiskey","item":"High West American Prairie","size":"750mL","vendor":"Southern","par":2,"rop":2,"bpc":6},{"cat":"Whiskey","item":"Knob Creek Bourbon","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Knob Creek Rye","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Knob Creek Bourbon x Rye","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Jack Daniel's Black","size":"1L","vendor":"Breakthru","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"Macallan 12yr Scotch","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"Brother's Bond Bourbon","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"WhistlePig PiggyBack Rye","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Whiskey","item":"E.H. Taylor Small Batch","size":"750mL","vendor":"Breakthru","par":1,"rop":1,"bpc":6},{"cat":"Whiskey","item":"Eagle Rare Bourbon","size":"750mL","vendor":"Breakthru","par":1,"rop":1,"bpc":6},{"cat":"Cognac/Brandy","item":"Remy Martin VSOP","size":"1L","vendor":"RNDC","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"St-Germain Elderflower","size":"750mL","vendor":"Southern","par":8,"rop":7,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Faretti Espresso Liqueur","size":"750mL","vendor":"Breakthru","par":12,"rop":10,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Pama Pomegranate","size":"1L","vendor":"Southern","par":5,"rop":5,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Combier Orange Liqueur","size":"1L","vendor":"Breakthru","par":4,"rop":4,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Aperol","size":"1L","vendor":"Southern","par":4,"rop":4,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Chinola Pineapple","size":"750mL","vendor":"Breakthru","par":4,"rop":3,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Chinola Passion Fruit","size":"750mL","vendor":"Breakthru","par":4,"rop":3,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Chinola Mango","size":"750mL","vendor":"Breakthru","par":4,"rop":3,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Toschi Fragoli Strawberry","size":"750mL","vendor":"Breakthru","par":2,"rop":2,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Amaro Montenegro","size":"750mL","vendor":"Johnson Brothers","par":3,"rop":2,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Le Mone Meyer Lemon","size":"750mL","vendor":"Breakthru","par":3,"rop":3,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Fruitful Dragon Fruit","size":"1L","vendor":"Mavrick","par":3,"rop":2,"bpc":1},{"cat":"Liqueur/Vermouth/Bitters","item":"Fruitful Passion Fruit","size":"1L","vendor":"Mavrick","par":1,"rop":1,"bpc":1},{"cat":"Liqueur/Vermouth/Bitters","item":"Baileys Irish Cream","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Pernod","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"DeKuyper Triple Sec","size":"1L","vendor":"Southern","par":7,"rop":6,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Campari","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Dark Door Ibisco Amaro","size":"750mL","vendor":"Greatbay","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Barrow's Intense Ginger","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Cynar","size":"1L","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Thatcher's Blood Orange","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Thatcher's Hibiscus","size":"750mL","vendor":"RNDC","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Osborne Pedro Ximenez Sherry","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Fernet-Branca","size":"750mL","vendor":"Reyes Bev","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Fernet-Branca Menta","size":"750mL","vendor":"Reyes Bev","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Regan's Orange Bitters","size":"149mL","vendor":"Breakthru","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Borghetti Espresso Liqueur","size":"750mL","vendor":"Reyes Bev","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Angostura Aromatic Bitters","size":"473mL","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Gionelli Triple Sec","size":"1L","vendor":"Johnson Brothers","par":1,"rop":1,"bpc":12},{"cat":"Liqueur/Vermouth/Bitters","item":"Chareau Aloe Liqueur","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Carpano Antica Vermouth","size":"1L","vendor":"Reyes Bev","par":1,"rop":1,"bpc":6},{"cat":"Liqueur/Vermouth/Bitters","item":"Carpano Botanic Bitter","size":"1L","vendor":"Reyes Bev","par":1,"rop":1,"bpc":1},{"cat":"Liqueur/Vermouth/Bitters","item":"Clement Banane","size":"375mL","vendor":"Mavrick","par":1,"rop":1,"bpc":6},{"cat":"Wine","item":"William Wycliff Champagne","size":"750mL","vendor":"Johnson Brothers","par":46,"rop":38,"bpc":12},{"cat":"Wine","item":"Hampton Water Rose Bubbly","size":"750mL","vendor":"Southern","par":19,"rop":16,"bpc":12},{"cat":"Wine","item":"Hampton Water Rose","size":"750mL","vendor":"Southern","par":3,"rop":3,"bpc":12},{"cat":"Wine","item":"Hampton Water Rose","size":"1.5L","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Wine","item":"Decoy Sauvignon Blanc","size":"750mL","vendor":"Southern","par":18,"rop":15,"bpc":12},{"cat":"Wine","item":"Decoy Merlot","size":"750mL","vendor":"Breakthru","par":3,"rop":3,"bpc":12},{"cat":"Wine","item":"Mionetto Prosecco Brut","size":"750mL","vendor":"Southern","par":9,"rop":8,"bpc":6},{"cat":"Wine","item":"Mionetto Prosecco Gold","size":"750mL","vendor":"Southern","par":6,"rop":5,"bpc":15},{"cat":"Wine","item":"Mionetto Avantgarde Prosecco","size":"750mL","vendor":"Southern","par":15,"rop":12,"bpc":12},{"cat":"Wine","item":"Mionetto Prestige Rose","size":"750mL","vendor":"Southern","par":8,"rop":7,"bpc":12},{"cat":"Wine","item":"Grounded Cabernet Sauvignon","size":"750mL","vendor":"Mavrick","par":13,"rop":11,"bpc":1},{"cat":"Wine","item":"Grounded Sauvignon Blanc","size":"750mL","vendor":"Mavrick","par":15,"rop":12,"bpc":1},{"cat":"Wine","item":"The Seeker Pinot Noir","size":"750mL","vendor":"RNDC","par":8,"rop":6,"bpc":12},{"cat":"Wine","item":"Haras Cabernet","size":"750mL","vendor":"Southern","par":8,"rop":6,"bpc":12},{"cat":"Wine","item":"Haras Chardonnay","size":"750mL","vendor":"Southern","par":5,"rop":4,"bpc":12},{"cat":"Wine","item":"Carmel Road Chardonnay","size":"750mL","vendor":"Southern","par":8,"rop":7,"bpc":12},{"cat":"Wine","item":"Benvolio Pinot Grigio","size":"750mL","vendor":"Southern","par":9,"rop":8,"bpc":12},{"cat":"Wine","item":"Joel Gott Palisades Red","size":"750mL","vendor":"Southern","par":7,"rop":6,"bpc":12},{"cat":"Wine","item":"Campo Viejo Cava Brut","size":"750mL","vendor":"Southern","par":10,"rop":8,"bpc":6},{"cat":"Wine","item":"Bonanza Cabernet","size":"750mL","vendor":"Southern","par":5,"rop":5,"bpc":12},{"cat":"Wine","item":"Bonanza Cabernet","size":"1.5L","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Wine","item":"Josh Cellars Cabernet","size":"375mL","vendor":"Southern","par":9,"rop":8,"bpc":12},{"cat":"Wine","item":"Josh Cellars Chardonnay","size":"375mL","vendor":"Southern","par":9,"rop":8,"bpc":12},{"cat":"Wine","item":"William Hill Cabernet","size":"750mL","vendor":"Mavrick","par":4,"rop":3,"bpc":12},{"cat":"Wine","item":"La Marca Prosecco","size":"750mL","vendor":"Johnson Brothers","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Laroche Pinot Noir","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Veuve Clicquot Brut","size":"750mL","vendor":"Southern","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Harken Chardonnay","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Borghi Ad Est Pinot Grigio","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Torres Andica Carmenere","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Sequoia Grove Cabernet","size":"750mL","vendor":"RNDC","par":2,"rop":2,"bpc":12},{"cat":"Wine","item":"Matua Sauvignon Blanc","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Altano Douro Red","size":"750mL","vendor":"N/A","par":1,"rop":1,"bpc":12},{"cat":"Wine","item":"Canyon Road Moscato","size":"750mL","vendor":"Johnson Brothers","par":1,"rop":1,"bpc":12},{"cat":"Beer/Keg","item":"Modelo Especial (Keg)","size":"7.75gal","vendor":"Greatbay","par":1,"rop":1,"bpc":1},{"cat":"Beer/Keg","item":"Modelo Especial (Barrel)","size":"?","vendor":"Greatbay","par":1,"rop":1,"bpc":1},{"cat":"Beer/Keg","item":"Sam Adams Summer Ale (Keg)","size":"?","vendor":"JJ Taylor","par":2,"rop":2,"bpc":1},{"cat":"Beer/Keg","item":"Sam Adams Cold Snap (Keg)","size":"?","vendor":"JJ Taylor","par":1,"rop":1,"bpc":1},{"cat":"Beer/Keg","item":"Stella Artois (Barrel)","size":"5.1gal","vendor":"Greatbay","par":1,"rop":1,"bpc":1},{"cat":"Beer/Keg","item":"Funky Buddha Hop Gun IPA (Barrel)","size":"?","vendor":"Greatbay","par":1,"rop":1,"bpc":1},{"cat":"Beer/RTD","item":"Modelo Especial","size":"12oz","vendor":"Greatbay","par":75,"rop":62,"bpc":24},{"cat":"Beer/RTD","item":"Michelob Ultra","size":"12oz","vendor":"Greatbay","par":82,"rop":68,"bpc":24},{"cat":"Beer/RTD","item":"Stella Artois","size":"11.2oz","vendor":"Greatbay","par":64,"rop":54,"bpc":24},{"cat":"Beer/RTD","item":"Corona Extra","size":"12oz","vendor":"Greatbay","par":57,"rop":48,"bpc":24},{"cat":"Beer/RTD","item":"Corona Light","size":"12oz","vendor":"Greatbay","par":16,"rop":14,"bpc":24},{"cat":"Beer/RTD","item":"Corona Premier","size":"12oz","vendor":"Greatbay","par":4,"rop":3,"bpc":24},{"cat":"Beer/RTD","item":"Miller Lite","size":"12oz","vendor":"JJ Taylor","par":128,"rop":107,"bpc":24},{"cat":"Beer/RTD","item":"Sierra Nevada Hazy Little Thing","size":"12oz","vendor":"JJ Taylor","par":77,"rop":64,"bpc":24},{"cat":"Beer/RTD","item":"Sierra Nevada Hazy Variety Pack","size":"12oz","vendor":"JJ Taylor","par":10,"rop":9,"bpc":24},{"cat":"Beer/RTD","item":"Coors Light","size":"12oz","vendor":"JJ Taylor","par":92,"rop":77,"bpc":24},{"cat":"Beer/RTD","item":"Yuengling Lager","size":"12oz","vendor":"JJ Taylor","par":82,"rop":69,"bpc":24},{"cat":"Beer/RTD","item":"Bud Light","size":"12oz","vendor":"Greatbay","par":18,"rop":15,"bpc":24},{"cat":"Beer/RTD","item":"New Belgium Fat Tire","size":"12oz","vendor":"JJ Taylor","par":41,"rop":35,"bpc":24},{"cat":"Beer/RTD","item":"Palma B","size":"12oz","vendor":"JJ Taylor","par":13,"rop":11,"bpc":24},{"cat":"Beer/RTD","item":"3 Daughters Key Lime Cider","size":"12oz","vendor":"Greatbay","par":13,"rop":11,"bpc":24},{"cat":"Beer/RTD","item":"Presidente","size":"12oz","vendor":"Greatbay","par":16,"rop":14,"bpc":24},{"cat":"Beer/RTD","item":"Sam Adams Boston Lager","size":"12oz","vendor":"JJ Taylor","par":26,"rop":22,"bpc":24},{"cat":"Beer/RTD","item":"Cigar City Jai Alai IPA","size":"12oz","vendor":"JJ Taylor","par":26,"rop":22,"bpc":24},{"cat":"Beer/RTD","item":"Athletic Upside Dawn (NA)","size":"12oz","vendor":"JJ Taylor","par":26,"rop":22,"bpc":24},{"cat":"Beer/RTD","item":"Athletic Free Wave Hazy IPA (NA)","size":"12oz","vendor":"JJ Taylor","par":26,"rop":0,"bpc":24},{"cat":"Beer/RTD","item":"Budweiser","size":"12oz","vendor":"Greatbay","par":8,"rop":6,"bpc":24},{"cat":"Beer/RTD","item":"Sierra Premium Pilsner","size":"12oz","vendor":"JJ Taylor","par":15,"rop":13,"bpc":24},{"cat":"RTD/Seltzer","item":"High Noon Pineapple","size":"12oz","vendor":"Johnson Brothers","par":15,"rop":12,"bpc":24},{"cat":"RTD/Seltzer","item":"High Noon Watermelon","size":"12oz","vendor":"Johnson Brothers","par":9,"rop":8,"bpc":24},{"cat":"RTD/Seltzer","item":"High Noon Black Cherry","size":"12oz","vendor":"Johnson Brothers","par":9,"rop":8,"bpc":24},{"cat":"Water","item":"Icelandic Glacial Water","size":"16.9oz","vendor":"Greatbay","par":337,"rop":281,"bpc":24},{"cat":"Energy","item":"Red Bull White Peach","size":0,"vendor":"Breakthru","par":16,"rop":14,"bpc":24},{"cat":"Energy","item":"Red Bull","size":"8.4oz","vendor":"Breakthru","par":16,"rop":14,"bpc":24},{"cat":"Energy","item":"Red Bull Sugar Free","size":"8.4oz","vendor":"Breakthru","par":11,"rop":9,"bpc":24},{"cat":"Energy","item":"Red Bull Tropical","size":"8.4oz","vendor":"Breakthru","par":4,"rop":3,"bpc":24},{"cat":"Mixer/Garnish","item":"Filthy Agave Nectar","size":"32oz","vendor":"Southern","par":3,"rop":3,"bpc":8},{"cat":"Mixer/Garnish","item":"Fever Tree - Club Soda","size":"6.76oz","vendor":"Southern","par":31,"rop":26,"bpc":24},{"cat":"Mixer/Garnish","item":"Fever Tree - Mediterranean Tonic","size":"6.76oz","vendor":"JJ Taylor","par":16,"rop":14,"bpc":24},{"cat":"Mixer/Garnish","item":"Fever Tree - Pink Grapefruit","size":"6.76oz","vendor":"JJ Taylor","par":5,"rop":5,"bpc":24},{"cat":"Mixer/Garnish","item":"Fever Tree - Blood Orange Ginger Beer","size":"6.76oz","vendor":"JJ Taylor","par":5,"rop":5,"bpc":24},{"cat":"Mixer/Garnish","item":"Filthy Blue Cheese Olives","size":"64oz","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Mixer/Garnish","item":"Filthy Olive Brine","size":"8oz","vendor":"Southern","par":8,"rop":6,"bpc":12},{"cat":"Mixer/Garnish","item":"Filthy Black Cherries","size":"45oz","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Mixer/Garnish","item":"Filthy Cherries","size":"64oz","vendor":"Southern","par":1,"rop":1,"bpc":6},{"cat":"Mixer/Garnish","item":"Filthy Queen Olives","size":"64oz","vendor":"Southern","par":2,"rop":2,"bpc":6},{"cat":"Mixer/Garnish","item":"Filthy Bloody Mary Mix","size":"32oz","vendor":"Southern","par":3,"rop":3,"bpc":8},{"cat":"Mixer/Garnish","item":"Fee Brothers Fee Foam","size":"?","vendor":"RNDC","par":3,"rop":3,"bpc":12},{"cat":"Mixer/Garnish","item":"Real Cream of Coconut","size":"16.9oz","vendor":"Breakthru","par":2,"rop":2,"bpc":12}];
+const list=document.getElementById('list');
+const state={};
+const groups={};const order=[];
+ITEMS.forEach((it,idx)=>{it._id=idx;if(!groups[it.cat]){groups[it.cat]=[];order.push(it.cat);}groups[it.cat].push(it);});
+order.forEach(cat=>{
+  const sec=document.createElement('div');sec.className='cat';sec.dataset.cat=cat;
+  sec.innerHTML='<h2>'+cat+'</h2>';
+  groups[cat].forEach(it=>{
+    const row=document.createElement('div');row.className='row';row.dataset.id=it._id;
+    row.dataset.search=(it.item+' '+(it.vendor||'')).toLowerCase();
+    row.innerHTML=
+      '<div class="cb">✓</div>'+
+      '<div class="info"><div class="name">'+it.item+'</div>'+
+      '<div class="meta"><b>'+(it.size||'')+'</b> &nbsp;·&nbsp; <span class="bpc">'+it.bpc+'/case</span> &nbsp;·&nbsp; PAR '+it.par+' btl</div></div>'+
+      '<div class="qtywrap"><input class="qty" type="number" min="0" inputmode="numeric" value="1"><span class="qlbl">cases</span></div>';
+    sec.appendChild(row);
+  });
+  list.appendChild(sec);
+});
+function toggle(row,force){
+  const id=row.dataset.id;
+  const on=force!==undefined?force:!row.classList.contains('on');
+  row.classList.toggle('on',on);
+  state[id]=on;
+  updateCount();
+}
+list.addEventListener('click',e=>{
+  const row=e.target.closest('.row');if(!row)return;
+  if(e.target.classList.contains('qty'))return;
+  toggle(row);
+});
+list.addEventListener('input',e=>{if(e.target.classList.contains('qty')){const row=e.target.closest('.row');if(!row.classList.contains('on'))toggle(row,true);}});
+function updateCount(){
+  const n=Object.values(state).filter(Boolean).length+getCustom().length;
+  document.getElementById('count').textContent=n+(n===1?' item':' items');
+}
+const customRows=document.getElementById('customRows');
+function addCustomRow(){
+  const row=document.createElement('div');row.className='crow';
+  row.innerHTML=
+    '<input class="c-name" placeholder="Item name" autocomplete="off">'+
+    '<input class="c-size" placeholder="Size" autocomplete="off">'+
+    '<input class="c-bpc" type="number" min="0" inputmode="numeric" placeholder="/cs">'+
+    '<input class="c-qty" type="number" min="0" inputmode="numeric" placeholder="Cases">'+
+    '<button class="c-del" title="Remove">&times;</button>';
+  row.querySelector('.c-del').addEventListener('click',()=>{row.remove();updateCount();});
+  row.addEventListener('input',updateCount);
+  customRows.appendChild(row);
+  row.querySelector('.c-name').focus();
+}
+function getCustom(){
+  return [...customRows.querySelectorAll('.crow')].map(r=>({
+    name:r.querySelector('.c-name').value.trim(),
+    size:r.querySelector('.c-size').value.trim(),
+    bpc:r.querySelector('.c-bpc').value.trim(),
+    qty:r.querySelector('.c-qty').value.trim()
+  })).filter(c=>c.name);
+}
+document.getElementById('addCustom').addEventListener('click',addCustomRow);
+document.getElementById('search').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.row').forEach(r=>{r.classList.toggle('hidden',q&&!r.dataset.search.includes(q));});
+  document.querySelectorAll('.cat').forEach(c=>{const any=[...c.querySelectorAll('.row')].some(r=>!r.classList.contains('hidden'));c.classList.toggle('hidden',!any);});
+});
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function collectRows(){
+  const rows=[];
+  order.forEach(cat=>{
+    groups[cat].filter(it=>state[it._id]).forEach(it=>{
+      const el=document.querySelector('.row[data-id="'+it._id+'"]');
+      rows.push({vendor:it.vendor||'—',item:it.item,size:it.size||'',bpc:it.bpc,cases:(el.querySelector('.qty').value||1),cat:cat});
+    });
+  });
+  getCustom().forEach(c=>rows.push({vendor:'OTHER / NOT LISTED',item:c.name,size:c.size,bpc:(c.bpc||''),cases:(c.qty||'?'),cat:'Other'}));
+  rows.sort((a,b)=>{
+    if(a.vendor==='OTHER / NOT LISTED')return 1;
+    if(b.vendor==='OTHER / NOT LISTED')return -1;
+    return a.vendor.localeCompare(b.vendor)||a.cat.localeCompare(b.cat)||a.item.localeCompare(b.item);
+  });
+  return rows;
+}
+const dateStr=()=>new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'});
+function buildHTML(rows){
+  let h='<div style="font-family:Arial,Helvetica,sans-serif;color:#111;">';
+  h+='<p style="margin:0 0 2px;font-size:16px;font-weight:bold;">Cane &amp; Barrel — Weekly Bar Order</p>';
+  h+='<p style="margin:0 0 10px;font-size:12px;color:#555;">'+dateStr()+' &nbsp;·&nbsp; '+rows.length+' item'+(rows.length===1?'':'s')+' &nbsp;·&nbsp; quantities are CASES</p>';
+  let vendor=null;
+  h+='<table cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-size:13px;">';
+  rows.forEach(r=>{
+    if(r.vendor!==vendor){
+      vendor=r.vendor;
+      h+='<tr><td colspan="4" style="background:#c9962b;color:#111;font-weight:bold;padding:6px 8px;border:1px solid #b08425;">'+esc(vendor)+'</td></tr>';
+      h+='<tr style="background:#f0f0f0;"><td style="border:1px solid #ccc;font-weight:bold;">Cases</td><td style="border:1px solid #ccc;font-weight:bold;">Item</td><td style="border:1px solid #ccc;font-weight:bold;">Size</td><td style="border:1px solid #ccc;font-weight:bold;">Btl/Cs</td></tr>';
+    }
+    h+='<tr><td style="border:1px solid #ccc;text-align:center;font-weight:bold;">'+esc(r.cases)+'</td><td style="border:1px solid #ccc;">'+esc(r.item)+'</td><td style="border:1px solid #ccc;color:#555;">'+esc(r.size)+'</td><td style="border:1px solid #ccc;text-align:center;color:#555;">'+esc(r.bpc)+'</td></tr>';
+  });
+  h+='</table></div>';
+  return h;
+}
+function buildPlain(rows){
+  const lines=['CANE & BARREL — WEEKLY BAR ORDER',dateStr(),rows.length+' item'+(rows.length===1?'':'s')+'  (quantities = CASES)',''];
+  let vendor=null;
+  rows.forEach(r=>{
+    if(r.vendor!==vendor){vendor=r.vendor;lines.push('— '+vendor.toUpperCase()+' —');}
+    const q=String(r.cases).padStart(3,' ');
+    const cs=r.bpc?', '+r.bpc+'/cs':'';
+    lines.push(q+' cs  '+r.item+(r.size?' ('+r.size+cs+')':''));
+  });
+  return lines.join('\n');
+}
+function showToast(msg){const t=document.getElementById('toast');if(msg)t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+async function copyBoth(html,plain){
+  try{
+    const item=new ClipboardItem({
+      'text/html':new Blob([html],{type:'text/html'}),
+      'text/plain':new Blob([plain],{type:'text/plain'})
+    });
+    await navigator.clipboard.write([item]);
+    showToast('Copied ✓');
+  }catch(e){
+    try{await navigator.clipboard.writeText(plain);showToast('Copied ✓');}
+    catch(e2){const ta=document.getElementById('out');ta.select();document.execCommand('copy');showToast('Copied ✓');}
+  }
+}
+const dlg=document.getElementById('dlg');
+let lastHTML='',lastPlain='';
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const rows=collectRows();
+  if(!rows.length){alert('Nothing checked yet. Tap items that are running low first.');return;}
+  lastHTML=buildHTML(rows);lastPlain=buildPlain(rows);
+  document.getElementById('outView').innerHTML=lastHTML;
+  document.getElementById('out').value=lastPlain;
+  copyBoth(lastHTML,lastPlain);
+  dlg.showModal();
+});
+document.getElementById('dlgCopy').addEventListener('click',()=>copyBoth(lastHTML,lastPlain));
+document.getElementById('dlgCopyText').addEventListener('click',()=>{
+  navigator.clipboard.writeText(lastPlain).then(()=>showToast('Text copied ✓')).catch(()=>{const ta=document.getElementById('out');ta.style.display='block';ta.select();document.execCommand('copy');showToast('Text copied ✓');});
+});
+document.getElementById('dlgClose').addEventListener('click',()=>dlg.close());
+document.getElementById('dlgX').addEventListener('click',()=>dlg.close());
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all checked items?'))return;
+  document.querySelectorAll('.row.on').forEach(r=>toggle(r,false));
+  customRows.innerHTML='';updateCount();
+});
+updateCount();
+</script>
+</body>
+</html>
